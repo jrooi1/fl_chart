@@ -302,6 +302,7 @@ class AxisTitles with EquatableMixin {
   /// [sideTitles] property is responsible to show your axis side labels
   AxisTitles({
     this.axisNameWidget,
+    this.drawInside = false,
     double? axisNameSize,
     SideTitles? sideTitles,
     bool? drawBehindEverything,
@@ -323,6 +324,8 @@ class AxisTitles with EquatableMixin {
   ///
   /// In the future, we will convert tooltips to a widget, that would solve this problem.
   final bool drawBelowEverything;
+
+  final bool drawInside;
 
   /// If there is something to show as axisTitles, it returns true
   bool get showAxisTitles => axisNameWidget != null && axisNameSize != 0;
