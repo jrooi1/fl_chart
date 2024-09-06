@@ -65,6 +65,12 @@ void main() {
       expect(flSpot1 == flSpot2, false);
 
       expect(flSpot2 == flSpot2Clone, true);
+
+      expect(nullSpot1 == nullSpot2, true);
+
+      expect(nullSpot2 == nullSpot3, true);
+
+      expect(nullSpot1 == nullSpot3, true);
     });
 
     test('FlGridData equality test', () {
@@ -80,7 +86,7 @@ void main() {
 
       expect(
         flLine1 ==
-            FlLine(
+            const FlLine(
               color: Colors.green,
               strokeWidth: 1.001,
               dashArray: [1, 2, 3],
@@ -90,7 +96,7 @@ void main() {
 
       expect(
         flLine1 ==
-            FlLine(
+            const FlLine(
               color: Colors.green,
               strokeWidth: 1,
               dashArray: [
@@ -101,24 +107,29 @@ void main() {
       );
 
       expect(
-        flLine1 == FlLine(color: Colors.green, strokeWidth: 1, dashArray: []),
+        flLine1 ==
+            const FlLine(color: Colors.green, strokeWidth: 1, dashArray: []),
         false,
       );
 
       expect(
-        flLine1 == FlLine(color: Colors.green, strokeWidth: 1),
+        flLine1 == const FlLine(color: Colors.green, strokeWidth: 1),
         false,
       );
 
       expect(
         flLine1 ==
-            FlLine(color: Colors.white, strokeWidth: 1, dashArray: [1, 2, 3]),
+            const FlLine(
+              color: Colors.white,
+              strokeWidth: 1,
+              dashArray: [1, 2, 3],
+            ),
         false,
       );
 
       expect(
         flLine1 ==
-            FlLine(
+            const FlLine(
               color: Colors.green,
               strokeWidth: 100,
               dashArray: [1, 2, 3],

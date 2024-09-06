@@ -1,7 +1,9 @@
 import 'package:dartx/dartx.dart';
 import 'package:fl_chart_app/presentation/menu/app_menu.dart';
 import 'package:fl_chart_app/presentation/resources/app_resources.dart';
+import 'package:fl_chart_app/urls.dart';
 import 'package:fl_chart_app/util/app_helper.dart';
+import 'package:fl_chart_app/util/app_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -22,7 +24,7 @@ class HomePage extends StatelessWidget {
         _menuItemsIndices[type] = index;
         return ChartMenuItem(
           type,
-          type.getSimpleName(),
+          type.displayName,
           type.assetIcon,
         );
       },
@@ -50,6 +52,7 @@ class HomePage extends StatelessWidget {
               Navigator.of(context).pop();
             }
           },
+          onBannerClicked: () => AppUtils().tryToLaunchUrl(Urls.flChartUrl),
         );
         final samplesSectionWidget =
             ChartSamplesPage(chartType: showingChartType);
@@ -78,7 +81,7 @@ class HomePage extends StatelessWidget {
               ? AppBar(
                   elevation: 0,
                   backgroundColor: Colors.transparent,
-                  title: Text(showingChartType.getDisplayName()),
+                  title: Text(showingChartType.displayName),
                 )
               : null,
         );

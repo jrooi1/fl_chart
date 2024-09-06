@@ -1,6 +1,4 @@
-# LineChart
-
-<img src="https://github.com/imaNNeo/fl_chart/raw/master/repo_files/images/line_chart/line_chart.jpg" width="300" >
+<a href="https://www.youtube.com/watch?v=F3wTxTdAFaU&list=PL1-_rCwRcnbNpvodmbt43O81wMUdBv8-a"><img src="https://github.com/imaNNeo/fl_chart/raw/main/repo_files/images/line_chart/line_chart_video_thumbnail.png" width=540></a>
 
 ### How to use
 ```dart
@@ -22,18 +20,17 @@ When you change the chart's state, it animates to the new state internally (usin
 |lineBarsData| list of [LineChartBarData ](#LineChartBarData ) to show the chart's lines, they stack and can be drawn on top of each other|[]|
 |betweenBarsData| list of [BetweenBarsData](#BetweenBarsData ) to fill the area between 2 chart lines|[]|
 |titlesData| check the [FlTitlesData](base_chart.md#FlTitlesData)| FlTitlesData()|
-|axisTitleData| check the [FlAxisTitleData](base_chart.md#FlAxisTitleData)| FlAxisTitleData()|
 |extraLinesData| [ExtraLinesData](base_chart.md#ExtraLinesData) object to hold drawing details of extra horizontal and vertical lines. Check [ExtraLinesData](base_chart.md#ExtraLinesData)|ExtraLinesData()|
 |lineTouchData| [LineTouchData](#linetouchdata-read-about-touch-handling) holds the touch interactivity details| LineTouchData()|
 |rangeAnnotations| show range annotations behind the chart, check [RangeAnnotations](base_chart.md#RangeAnnotations) | RangeAnnotations()|
-|showingTooltipIndicators| show the tooltip based on provided list of [LineBarSpot](#LineBarSpot)| [] |
+|showingTooltipIndicators| show the tooltip based on provided list of [LineBarSpot](#LineBarSpot), The point is that you need to disable touches to show these tooltips manually| [] |
 |gridData| check the [FlGridData](base_chart.md#FlGridData)|FlGridData()|
 |borderData| check the [FlBorderData](base_chart.md#FlBorderData)|FlBorderData()|
-|minX| gets minimum x of x axis, if null, value will read from the input lineBars |null|
-|maxX| gets maximum x of x axis, if null, value will read from the input lineBars | null|
+|minX| gets minimum x of x axis, if null, value will read from the input lineBars (But it is more performant if you provide them)|null|
+|maxX| gets maximum x of x axis, if null, value will read from the input lineBars (But it is more performant if you provide them)| null|
 |baselineX| defines the baseline of x-axis | 0|
-|minY| gets minimum y of y axis, if null, value will read from the input lineBars | null|
-|maxY| gets maximum y of y axis, if null, value will read from the input lineBars | null|
+|minY| gets minimum y of y axis, if null, value will read from the input lineBars (But it is more performant if you provide them)| null|
+|maxY| gets maximum y of y axis, if null, value will read from the input lineBars (But it is more performant if you provide them)| null|
 |baselineY| defines the baseline of y-axis | 0|
 |clipData| clip the chart to the border (prevent drawing outside the border) | FlClipData.none()|
 |backgroundColor| a background color which is drawn behind th chart| null |
@@ -105,7 +102,7 @@ When you change the chart's state, it animates to the new state internally (usin
 |PropName|Description|default value|
 |:-------|:----------|:------------|
 |enabled|determines to enable or disable touch behaviors|true|
-|mouseCursorResolver|you can change the mouse cursor based on the provided [FlTouchEvent](https://github.com/imaNNeo/fl_chart/blob/master/repo_files/documentations/base_chart.md#fltouchevent) and [LineTouchResponse](#LineTouchResponse)|MouseCursor.defer|
+|mouseCursorResolver|you can change the mouse cursor based on the provided [FlTouchEvent](https://github.com/imaNNeo/fl_chart/blob/main/repo_files/documentations/base_chart.md#fltouchevent) and [LineTouchResponse](#LineTouchResponse)|MouseCursor.defer|
 |touchTooltipData|a [LineTouchTooltipData](#LineTouchTooltipData), that determines how show the tooltip on top of touched spots (appearance of the showing tooltip bubble)|LineTouchTooltipData|
 |getTouchedSpotIndicator| a callback that retrieves list of [TouchedSpotIndicatorData](#TouchedSpotIndicatorData) by the given list of [LineBarSpot](#LineBarSpot) for showing the indicators on touched spots|defaultTouchedIndicators|
 |touchSpotThreshold|the threshold of the touch accuracy|10|
@@ -113,14 +110,13 @@ When you change the chart's state, it animates to the new state internally (usin
 |handleBuiltInTouches| set this true if you want the built in touch handling (show a tooltip bubble and an indicator on touched spots) | true|
 |getTouchLineStart| controls where the line starts, default is bottom of the chart| defaultGetTouchLineStart|
 |getTouchLineEnd| controls where the line ends, default is the touch point| defaultGetTouchLineEnd|
-|touchCallback| listen to this callback to retrieve touch/pointer events and responses, it gives you a [FlTouchEvent](https://github.com/imaNNeo/fl_chart/blob/master/repo_files/documentations/base_chart.md#fltouchevent) and [LineTouchResponse](#LineTouchResponse)| null|
+|touchCallback| listen to this callback to retrieve touch/pointer events and responses, it gives you a [FlTouchEvent](https://github.com/imaNNeo/fl_chart/blob/main/repo_files/documentations/base_chart.md#fltouchevent) and [LineTouchResponse](#LineTouchResponse)| null|
 |longPressDuration| allows to customize the duration of the longPress gesture. If null, the duration of the longPressGesture is [kLongPressTimeout](https://api.flutter.dev/flutter/gestures/kLongPressTimeout-constant.html)| null|
 
 
 ### LineTouchTooltipData
  |PropName|Description|default value|
  |:-------|:----------|:------------|
- |tooltipBgColor|background color of the tooltip bubble|Colors.white|
  |tooltipBorder|border of the tooltip bubble|BorderSide.none|
  |tooltipRoundedRadius|background corner radius of the tooltip bubble|4|
  |tooltipPadding|padding of the tooltip|EdgeInsets.symmetric(horizontal: 16, vertical: 8)|
@@ -132,6 +128,7 @@ When you change the chart's state, it animates to the new state internally (usin
  |fitInsideHorizontally| forces tooltip to horizontally shift inside the chart's bounding box| false|
  |fitInsideVertically| forces tooltip to vertically shift inside the chart's bounding box| false|
  |showOnTopOfTheChartBoxArea| forces the tooltip container to top of the line| false|
+ |getTooltipColor|a callback that retrieves the Color for each touched spots separately from the given [LineBarSpot](#LineBarSpot) to set the background color of the tooltip bubble|Colors.blueGrey.darken(15)| 
 
 ### LineTooltipItem
 |PropName|Description|default value|
@@ -154,7 +151,7 @@ When you change the chart's state, it animates to the new state internally (usin
 |:-------|:----------|:------------|
 |bar|the [LineChartBarData](#LineChartBarData) that contains a spot|null|
 |barIndex|index of the target [LineChartBarData](#LineChartBarData) inside [LineChartData](#LineChartData)|null|
-|spotIndex|index of the target [FlSpot](#FlSpot) inside [LineChartBarData](#LineChartBarData)|null|
+|spotIndex|index of the target [FlSpot](base_chart.md#FlSpot) inside [LineChartBarData](#LineChartBarData)|null|
 
 
 ### TouchLineBarSpot
@@ -162,7 +159,7 @@ When you change the chart's state, it animates to the new state internally (usin
 |:-------|:----------|:------------|
 |bar|the [LineChartBarData](#LineChartBarData) that contains a spot|null|
 |barIndex|index of the target [LineChartBarData](#LineChartBarData) inside [LineChartData](#LineChartData)|null|
-|spotIndex|index of the target [FlSpot](#FlSpot) inside [LineChartBarData](#LineChartBarData)|null|
+|spotIndex|index of the target [FlSpot](base_chart.md#FlSpot) inside [LineChartBarData](#LineChartBarData)|null|
 |distance|distance to the touch event|null|
 
 
@@ -180,45 +177,45 @@ When you change the chart's state, it animates to the new state internally (usin
 ### some samples
 ----
 ##### Sample 1 ([Source Code](/example/lib/presentation/samples/line/line_chart_sample1.dart))
-<img src="https://github.com/imaNNeo/fl_chart/raw/master/repo_files/images/line_chart/line_chart_sample_1.gif" width="300" >
+<img src="https://github.com/imaNNeo/fl_chart/raw/main/repo_files/images/line_chart/line_chart_sample_1.gif" width="300" >
 
-<img src="https://github.com/imaNNeo/fl_chart/raw/master/repo_files/images/line_chart/line_chart_sample_1_anim.gif" width="300" >
+<img src="https://github.com/imaNNeo/fl_chart/raw/main/repo_files/images/line_chart/line_chart_sample_1_anim.gif" width="300" >
 
 
 ##### Sample 2 ([Source Code](/example/lib/presentation/samples/line/line_chart_sample2.dart))
-<img src="https://github.com/imaNNeo/fl_chart/raw/master/repo_files/images/line_chart/line_chart_sample_2.gif" width="300" >
+<img src="https://github.com/imaNNeo/fl_chart/raw/main/repo_files/images/line_chart/line_chart_sample_2.gif" width="300" >
 
-<img src="https://github.com/imaNNeo/fl_chart/raw/master/repo_files/images/line_chart/line_chart_sample_2_anim.gif" width="300" >
+<img src="https://github.com/imaNNeo/fl_chart/raw/main/repo_files/images/line_chart/line_chart_sample_2_anim.gif" width="300" >
 
 
 ##### Sample 3 ([Source Code](/example/lib/presentation/samples/line/line_chart_sample3.dart))
-<img src="https://github.com/imaNNeo/fl_chart/raw/master/repo_files/images/line_chart/line_chart_sample_3.gif" width="300" >
+<img src="https://github.com/imaNNeo/fl_chart/raw/main/repo_files/images/line_chart/line_chart_sample_3.gif" width="300" >
 
 
 ##### Sample 4 ([Source Code](/example/lib/presentation/samples/line/line_chart_sample4.dart))
-<img src="https://github.com/imaNNeo/fl_chart/raw/master/repo_files/images/line_chart/line_chart_sample_4.png" width="300" >
+<img src="https://github.com/imaNNeo/fl_chart/raw/main/repo_files/images/line_chart/line_chart_sample_4.png" width="300" >
 
 
 ##### Sample 5 ([Source Code](/example/lib/presentation/samples/line/line_chart_sample5.dart))
-<img src="https://github.com/imaNNeo/fl_chart/raw/master/repo_files/images/line_chart/line_chart_sample_5.png" width="300" >
+<img src="https://github.com/imaNNeo/fl_chart/raw/main/repo_files/images/line_chart/line_chart_sample_5.png" width="300" >
 
 
 ##### Sample 6 - Reversed ([Source Code](/example/lib/presentation/samples/line/line_chart_sample6.dart))
-<img src="https://github.com/imaNNeo/fl_chart/raw/master/repo_files/images/line_chart/line_chart_sample_6.png" width="300" >
+<img src="https://github.com/imaNNeo/fl_chart/raw/main/repo_files/images/line_chart/line_chart_sample_6.png" width="300" >
 
 
 ##### Sample 7 ([Source Code](/example/lib/presentation/samples/line/line_chart_sample7.dart))
-<img src="https://github.com/imaNNeo/fl_chart/raw/master/repo_files/images/line_chart/line_chart_sample_7.png" width="300" >
+<img src="https://github.com/imaNNeo/fl_chart/raw/main/repo_files/images/line_chart/line_chart_sample_7.png" width="300" >
 
 
 ##### Sample 8 ([Source Code](/example/lib/presentation/samples/line/line_chart_sample8.dart))
-<img src="https://github.com/imaNNeo/fl_chart/raw/master/repo_files/images/line_chart/line_chart_sample_8.png" width="300" >
+<img src="https://github.com/imaNNeo/fl_chart/raw/main/repo_files/images/line_chart/line_chart_sample_8.png" width="300" >
 
 ##### Sample 9 ([Source Code](/example/lib/presentation/samples/line/line_chart_sample9.dart))
-<img src="https://github.com/imaNNeo/fl_chart/raw/master/repo_files/images/line_chart/line_chart_sample_9.gif" width="300" >
+<img src="https://github.com/imaNNeo/fl_chart/raw/main/repo_files/images/line_chart/line_chart_sample_9.gif" width="300" >
 
 ##### Sample 10 ([Source Code](/example/lib/presentation/samples/line/line_chart_sample10.dart))
-<img src="https://github.com/imaNNeo/fl_chart/raw/master/repo_files/images/line_chart/line_chart_sample_10.gif" width="300" >
+<img src="https://github.com/imaNNeo/fl_chart/raw/main/repo_files/images/line_chart/line_chart_sample_10.gif" width="300" >
 
 ##### Sample 11 ([Source Code](/example/lib/presentation/samples/line/line_chart_sample11.dart))
 https://user-images.githubusercontent.com/7009300/152555425-3b53ac8c-257f-49b0-8d75-1a878c03ccaa.mp4

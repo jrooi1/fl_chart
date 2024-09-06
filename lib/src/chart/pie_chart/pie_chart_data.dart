@@ -30,6 +30,7 @@ class PieChartData extends BaseChartData with EquatableMixin {
     double? startDegreeOffset,
     PieTouchData? pieTouchData,
     FlBorderData? borderData,
+    bool? titleSunbeamLayout,
   })  : sections = sections?.where((element) => element.value != 0).toList() ??
             const [],
         centerSpaceRadius = centerSpaceRadius ?? double.infinity,
@@ -37,6 +38,7 @@ class PieChartData extends BaseChartData with EquatableMixin {
         sectionsSpace = sectionsSpace ?? 2,
         startDegreeOffset = startDegreeOffset ?? 0,
         pieTouchData = pieTouchData ?? PieTouchData(),
+        titleSunbeamLayout = titleSunbeamLayout ?? false,
         super(
           borderData: borderData ?? FlBorderData(show: false),
           touchData: pieTouchData ?? PieTouchData(),
@@ -52,6 +54,9 @@ class PieChartData extends BaseChartData with EquatableMixin {
   final Color centerSpaceColor;
 
   /// Defines gap between sections.
+  ///
+  /// Does not work on html-renderer,
+  /// https://github.com/imaNNeo/fl_chart/issues/955
   final double sectionsSpace;
 
   /// [PieChart] draws [sections] from zero degree (right side of the circle) clockwise.
@@ -59,6 +64,9 @@ class PieChartData extends BaseChartData with EquatableMixin {
 
   /// Handles touch behaviors and responses.
   final PieTouchData pieTouchData;
+
+  /// Whether to rotate the titles on each section of the chart
+  final bool titleSunbeamLayout;
 
   /// We hold this value to determine weight of each [PieChartSectionData.value].
   double get sumValue => sections
@@ -75,6 +83,7 @@ class PieChartData extends BaseChartData with EquatableMixin {
     double? startDegreeOffset,
     PieTouchData? pieTouchData,
     FlBorderData? borderData,
+    bool? titleSunbeamLayout,
   }) {
     return PieChartData(
       sections: sections ?? this.sections,
@@ -84,6 +93,7 @@ class PieChartData extends BaseChartData with EquatableMixin {
       startDegreeOffset: startDegreeOffset ?? this.startDegreeOffset,
       pieTouchData: pieTouchData ?? this.pieTouchData,
       borderData: borderData ?? this.borderData,
+      titleSunbeamLayout: titleSunbeamLayout ?? this.titleSunbeamLayout,
     );
   }
 
@@ -104,6 +114,7 @@ class PieChartData extends BaseChartData with EquatableMixin {
         startDegreeOffset:
             lerpDouble(a.startDegreeOffset, b.startDegreeOffset, t),
         sections: lerpPieChartSectionDataList(a.sections, b.sections, t),
+        titleSunbeamLayout: b.titleSunbeamLayout,
       );
     } else {
       throw Exception('Illegal State');
@@ -120,6 +131,7 @@ class PieChartData extends BaseChartData with EquatableMixin {
         sectionsSpace,
         startDegreeOffset,
         borderData,
+        titleSunbeamLayout,
       ];
 }
 
@@ -147,6 +159,7 @@ class PieChartSectionData {
   PieChartSectionData({
     double? value,
     Color? color,
+    this.gradient,
     double? radius,
     bool? showTitle,
     this.titleStyle,
@@ -174,6 +187,9 @@ class PieChartSectionData {
 
   /// Defines the color of section.
   final Color color;
+
+  /// Defines the gradient of section. If specified, overrides the color setting.
+  final Gradient? gradient;
 
   /// Defines the radius of section.
   final double radius;
@@ -215,6 +231,7 @@ class PieChartSectionData {
   PieChartSectionData copyWith({
     double? value,
     Color? color,
+    Gradient? gradient,
     double? radius,
     bool? showTitle,
     TextStyle? titleStyle,
@@ -227,6 +244,7 @@ class PieChartSectionData {
     return PieChartSectionData(
       value: value ?? this.value,
       color: color ?? this.color,
+      gradient: gradient ?? this.gradient,
       radius: radius ?? this.radius,
       showTitle: showTitle ?? this.showTitle,
       titleStyle: titleStyle ?? this.titleStyle,
@@ -249,6 +267,7 @@ class PieChartSectionData {
     return PieChartSectionData(
       value: lerpDouble(a.value, b.value, t),
       color: Color.lerp(a.color, b.color, t),
+      gradient: Gradient.lerp(a.gradient, b.gradient, t),
       radius: lerpDouble(a.radius, b.radius, t),
       showTitle: b.showTitle,
       titleStyle: TextStyle.lerp(a.titleStyle, b.titleStyle, t),
@@ -271,7 +290,7 @@ class PieChartSectionData {
 
 /// Holds data to handle touch events, and touch responses in the [PieChart].
 ///
-/// There is a touch flow, explained [here](https://github.com/imaNNeo/fl_chart/blob/master/repo_files/documentations/handle_touches.md)
+/// There is a touch flow, explained [here](https://github.com/imaNNeo/fl_chart/blob/main/repo_files/documentations/handle_touches.md)
 /// in a simple way, each chart's renderer captures the touch events, and passes the pointerEvent
 /// to the painter, and gets touched spot, and wraps it into a concrete [PieTouchResponse].
 class PieTouchData extends FlTouchData<PieTouchResponse> with EquatableMixin {

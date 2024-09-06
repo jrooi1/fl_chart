@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 /// Base class of our painters.
 class BaseChartPainter<D extends BaseChartData> {
   /// Draws some basic elements
-  BaseChartPainter();
+  const BaseChartPainter();
 
   // Paints [BaseChartData] into the provided canvas.
   void paint(
@@ -19,7 +19,7 @@ class BaseChartPainter<D extends BaseChartData> {
 /// Holds data for painting on canvas
 class PaintHolder<Data extends BaseChartData> {
   /// Holds data for painting on canvas
-  PaintHolder(this.data, this.targetData, this.textScale);
+  const PaintHolder(this.data, this.targetData, this.textScaler);
 
   /// [data] is what we need to show frame by frame (it might be changed by an animator)
   final Data data;
@@ -27,6 +27,6 @@ class PaintHolder<Data extends BaseChartData> {
   /// [targetData] is the target of animation that is playing.
   final Data targetData;
 
-  /// system [textScale]
-  final double textScale;
+  /// system [TextScaler] used for scaling texts for better readability
+  final TextScaler textScaler;
 }

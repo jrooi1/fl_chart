@@ -54,30 +54,38 @@ class ScatterChartData extends AxisChartData with EquatableMixin {
         showingTooltipIndicators = showingTooltipIndicators ?? const [],
         scatterLabelSettings = scatterLabelSettings ?? ScatterLabelSettings(),
         super(
-          gridData: gridData ?? FlGridData(),
+          gridData: gridData ?? const FlGridData(),
           touchData: scatterTouchData ?? ScatterTouchData(),
-          titlesData: titlesData ?? FlTitlesData(),
-          clipData: clipData ?? FlClipData.none(),
+          titlesData: titlesData ?? const FlTitlesData(),
+          clipData: clipData ?? const FlClipData.none(),
           minX: minX ??
               ScatterChartHelper.calculateMaxAxisValues(
                 scatterSpots ?? const [],
-              ).minX,
+              ).$1,
           maxX: maxX ??
               ScatterChartHelper.calculateMaxAxisValues(
                 scatterSpots ?? const [],
-              ).maxX,
+              ).$2,
           minY: minY ??
               ScatterChartHelper.calculateMaxAxisValues(
                 scatterSpots ?? const [],
-              ).minY,
+              ).$3,
           maxY: maxY ??
               ScatterChartHelper.calculateMaxAxisValues(
                 scatterSpots ?? const [],
-              ).maxY,
+              ).$4,
         );
   final List<ScatterSpot> scatterSpots;
   final ScatterTouchData scatterTouchData;
+
+  /// you can show some tooltipIndicators (a popup with an information)
+  /// on top of each [ScatterSpot] using [showingTooltipIndicators],
+  /// just put indices you want to show it on top of them.
+  ///
+  /// An important point is that you have to disable the default touch behaviour
+  /// to show the tooltip manually, see [ScatterTouchData.handleBuiltInTouches].
   final List<int> showingTooltipIndicators;
+
   final ScatterLabelSettings scatterLabelSettings;
 
   /// Lerps a [ScatterChartData] based on [t] value, check [Tween.lerp].
@@ -186,36 +194,43 @@ class ScatterSpot extends FlSpot with EquatableMixin {
     super.x,
     super.y, {
     bool? show,
-    double? radius,
-    Color? color,
+    FlDotPainter? dotPainter,
   })  : show = show ?? true,
-        radius = radius ?? 6,
-        color = color ??
-            Colors.primaries[((x * y) % Colors.primaries.length).toInt()];
+        dotPainter = dotPainter ??
+            FlDotCirclePainter(
+              radius: 6,
+              color:
+                  Colors.primaries[((x * y) % Colors.primaries.length).toInt()],
+            );
 
   /// Determines show or hide the spot.
   final bool show;
 
-  /// Determines size of the spot.
-  final double radius;
+  /// Determines shape of the spot
+  final FlDotPainter dotPainter;
 
-  /// Determines color of the spot.
-  Color color;
+  Size get size => dotPainter.getSize(this);
+
+  String get defaultLabel {
+    if (dotPainter is FlDotCirclePainter) {
+      return '${(dotPainter as FlDotCirclePainter).radius.toInt()}';
+    } else {
+      return '${x.toInt()}, ${y.toInt()}';
+    }
+  }
 
   @override
   ScatterSpot copyWith({
     double? x,
     double? y,
     bool? show,
-    double? radius,
-    Color? color,
+    FlDotPainter? dotPainter,
   }) {
     return ScatterSpot(
       x ?? this.x,
       y ?? this.y,
       show: show ?? this.show,
-      radius: radius ?? this.radius,
-      color: color ?? this.color,
+      dotPainter: dotPainter ?? this.dotPainter,
     );
   }
 
@@ -225,8 +240,7 @@ class ScatterSpot extends FlSpot with EquatableMixin {
       lerpDouble(a.x, b.x, t)!,
       lerpDouble(a.y, b.y, t)!,
       show: b.show,
-      radius: lerpDouble(a.radius, b.radius, t),
-      color: Color.lerp(a.color, b.color, t),
+      dotPainter: a.dotPainter.lerp(a.dotPainter, b.dotPainter, t),
     );
   }
 
@@ -236,14 +250,13 @@ class ScatterSpot extends FlSpot with EquatableMixin {
         x,
         y,
         show,
-        radius,
-        color,
+        dotPainter,
       ];
 }
 
 /// Holds data to handle touch events, and touch responses in the [ScatterChart].
 ///
-/// There is a touch flow, explained [here](https://github.com/imaNNeo/fl_chart/blob/master/repo_files/documentations/handle_touches.md)
+/// There is a touch flow, explained [here](https://github.com/imaNNeo/fl_chart/blob/main/repo_files/documentations/handle_touches.md)
 /// in a simple way, each chart's renderer captures the touch events, and passes the pointerEvent
 /// to the painter, and gets touched spot, and wraps it into a concrete [ScatterTouchResponse].
 class ScatterTouchData extends FlTouchData<ScatterTouchResponse>
@@ -385,7 +398,7 @@ class ScatterTouchTooltipData with EquatableMixin {
   /// if [ScatterTouchData.handleBuiltInTouches] is true,
   /// [ScatterChart] shows a tooltip popup on top of spots automatically when touch happens,
   /// otherwise you can show it manually using [ScatterChartData.showingTooltipIndicators].
-  /// Tooltip shows on top of spots, with [tooltipBgColor] as a background color,
+  /// Tooltip shows on top of spots, with [getTooltipColor] as a background color,
   /// and you can set corner radius using [tooltipRoundedRadius].
   /// If you want to have a padding inside the tooltip, fill [tooltipPadding].
   /// Content of the tooltip will provide using [getTooltipItems] callback, you can override it
@@ -395,7 +408,6 @@ class ScatterTouchTooltipData with EquatableMixin {
   /// you can set [fitInsideHorizontally] true to force it to shift inside the chart horizontally,
   /// also you can set [fitInsideVertically] true to force it to shift inside the chart vertically.
   ScatterTouchTooltipData({
-    Color? tooltipBgColor,
     double? tooltipRoundedRadius,
     EdgeInsets? tooltipPadding,
     FLHorizontalAlignment? tooltipHorizontalAlignment,
@@ -406,8 +418,8 @@ class ScatterTouchTooltipData with EquatableMixin {
     bool? fitInsideVertically,
     double? rotateAngle,
     BorderSide? tooltipBorder,
-  })  : tooltipBgColor = tooltipBgColor ?? Colors.blueGrey.darken(15),
-        tooltipRoundedRadius = tooltipRoundedRadius ?? 4,
+    GetScatterTooltipColor? getTooltipColor,
+  })  : tooltipRoundedRadius = tooltipRoundedRadius ?? 4,
         tooltipPadding = tooltipPadding ??
             const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         tooltipHorizontalAlignment =
@@ -419,10 +431,8 @@ class ScatterTouchTooltipData with EquatableMixin {
         fitInsideVertically = fitInsideVertically ?? false,
         rotateAngle = rotateAngle ?? 0.0,
         tooltipBorder = tooltipBorder ?? BorderSide.none,
+        getTooltipColor = getTooltipColor ?? defaultScatterTooltipColor,
         super();
-
-  /// The tooltip background color.
-  final Color tooltipBgColor;
 
   /// Sets a rounded radius for the tooltip.
   final double tooltipRoundedRadius;
@@ -454,10 +464,12 @@ class ScatterTouchTooltipData with EquatableMixin {
   /// The tooltip border color.
   final BorderSide tooltipBorder;
 
+  /// Retrieves data for showing content inside the tooltip.
+  final GetScatterTooltipColor getTooltipColor;
+
   /// Used for equality check, see [EquatableMixin].
   @override
   List<Object?> get props => [
-        tooltipBgColor,
         tooltipRoundedRadius,
         tooltipPadding,
         tooltipHorizontalAlignment,
@@ -468,12 +480,12 @@ class ScatterTouchTooltipData with EquatableMixin {
         fitInsideVertically,
         rotateAngle,
         tooltipBorder,
+        getTooltipColor,
       ];
 
   /// Copies current [ScatterTouchTooltipData] to a new [ScatterTouchTooltipData],
   /// and replaces provided values.
   ScatterTouchTooltipData copyWith({
-    Color? tooltipBgColor,
     double? tooltipRoundedRadius,
     EdgeInsets? tooltipPadding,
     FLHorizontalAlignment? tooltipHorizontalAlignment,
@@ -484,9 +496,9 @@ class ScatterTouchTooltipData with EquatableMixin {
     bool? fitInsideVertically,
     double? rotateAngle,
     BorderSide? tooltipBorder,
+    GetScatterTooltipColor? getTooltipColor,
   }) {
     return ScatterTouchTooltipData(
-      tooltipBgColor: tooltipBgColor ?? this.tooltipBgColor,
       tooltipRoundedRadius: tooltipRoundedRadius ?? this.tooltipRoundedRadius,
       tooltipPadding: tooltipPadding ?? this.tooltipPadding,
       tooltipHorizontalAlignment:
@@ -500,6 +512,7 @@ class ScatterTouchTooltipData with EquatableMixin {
       fitInsideVertically: fitInsideVertically ?? this.fitInsideVertically,
       rotateAngle: rotateAngle ?? this.rotateAngle,
       tooltipBorder: tooltipBorder ?? this.tooltipBorder,
+      getTooltipColor: getTooltipColor ?? this.getTooltipColor,
     );
   }
 }
@@ -517,14 +530,35 @@ typedef GetScatterTooltipItems = ScatterTooltipItem? Function(
 /// Default implementation for [ScatterTouchTooltipData.getTooltipItems].
 ScatterTooltipItem? defaultScatterTooltipItem(ScatterSpot touchedSpot) {
   final textStyle = TextStyle(
-    color: touchedSpot.color,
+    color: touchedSpot.dotPainter.mainColor,
     fontWeight: FontWeight.bold,
     fontSize: 14,
   );
+  String text;
+  if (touchedSpot.dotPainter is FlDotCirclePainter) {
+    text = '${(touchedSpot.dotPainter as FlDotCirclePainter).radius.toInt()}';
+  } else {
+    text = '${touchedSpot.x.toInt()}, ${touchedSpot.y.toInt()}';
+  }
   return ScatterTooltipItem(
-    '${touchedSpot.radius.toInt()}',
+    text,
     textStyle: textStyle,
   );
+}
+
+/// Provides a [Color] to show different background color inside the [ScatterTouchTooltipData].
+///
+/// You can override [ScatterTouchTooltipData.getTooltipColor], it gives you
+/// [touchedSpot] that touch happened on,
+/// then you should and pass your custom [Color]
+/// to show it inside the tooltip popup.
+typedef GetScatterTooltipColor = Color Function(
+  ScatterSpot touchedSpot,
+);
+
+/// Default implementation for [ScatterTouchTooltipData.getTooltipItems].
+Color defaultScatterTooltipColor(ScatterSpot touchedSpot) {
+  return Colors.blueGrey.darken(15);
 }
 
 /// Holds data of showing each item in the tooltip popup.
@@ -630,9 +664,8 @@ TextStyle? getDefaultLabelTextStyleFunction(
 String getDefaultLabelFunction(
   int spotIndex,
   ScatterSpot spot,
-) {
-  return '${spot.radius}';
-}
+) =>
+    spot.defaultLabel;
 
 /// Defines information about the labels in the [ScatterChart]
 class ScatterLabelSettings with EquatableMixin {

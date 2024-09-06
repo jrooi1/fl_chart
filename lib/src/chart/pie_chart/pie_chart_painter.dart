@@ -4,6 +4,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:fl_chart/src/chart/base/base_chart/base_chart_painter.dart';
 import 'package:fl_chart/src/chart/base/line.dart';
 import 'package:fl_chart/src/chart/pie_chart/pie_chart_data.dart';
+import 'package:fl_chart/src/extensions/paint_extension.dart';
 import 'package:fl_chart/src/utils/canvas_wrapper.dart';
 import 'package:fl_chart/src/utils/utils.dart';
 import 'package:flutter/material.dart';
@@ -21,11 +22,15 @@ class PieChartPainter extends BaseChartPainter<PieChartData> {
   PieChartPainter() : super() {
     _sectionPaint = Paint()..style = PaintingStyle.stroke;
 
+    _sectionSaveLayerPaint = Paint();
+
     _sectionStrokePaint = Paint()..style = PaintingStyle.stroke;
 
     _centerSpacePaint = Paint()..style = PaintingStyle.fill;
   }
+
   late Paint _sectionPaint;
+  late Paint _sectionSaveLayerPaint;
   late Paint _sectionStrokePaint;
   late Paint _centerSpacePaint;
 
@@ -98,15 +103,35 @@ class PieChartPainter extends BaseChartPainter<PieChartData> {
       final sectionDegree = sectionsAngle[i];
 
       if (sectionDegree == 360) {
+        final radius = centerRadius + section.radius / 2;
+        final rect = Rect.fromCircle(center: center, radius: radius);
         _sectionPaint
-          ..color = section.color
+          ..setColorOrGradient(
+            section.color,
+            section.gradient,
+            rect,
+          )
           ..strokeWidth = section.radius
-          ..style = PaintingStyle.stroke;
-        canvasWrapper.drawCircle(
-          center,
-          centerRadius + section.radius / 2,
-          _sectionPaint,
+          ..style = PaintingStyle.fill;
+
+        final bounds = Rect.fromCircle(
+          center: center,
+          radius: centerRadius + section.radius,
         );
+        canvasWrapper
+          ..saveLayer(bounds, _sectionSaveLayerPaint)
+          ..drawCircle(
+            center,
+            centerRadius + section.radius,
+            _sectionPaint..blendMode = BlendMode.srcOver,
+          )
+          ..drawCircle(
+            center,
+            centerRadius,
+            _sectionPaint..blendMode = BlendMode.srcOut,
+          )
+          ..restore();
+        _sectionPaint.blendMode = BlendMode.srcOver;
         if (section.borderSide.width != 0.0 &&
             section.borderSide.color.opacity != 0.0) {
           _sectionStrokePaint
@@ -197,19 +222,29 @@ class PieChartPainter extends BaseChartPainter<PieChartData> {
         Line(startLineFrom, startLineTo),
         sectionSpace,
       );
-      sectionPath = Path.combine(
-        PathOperation.difference,
-        sectionPath,
-        startLineSeparatorPath,
-      );
+      try {
+        sectionPath = Path.combine(
+          PathOperation.difference,
+          sectionPath,
+          startLineSeparatorPath,
+        );
+      } catch (e) {
+        /// It's a flutter engine issue with [Path.combine] in web-html renderer
+        /// https://github.com/imaNNeo/fl_chart/issues/955
+      }
 
       final endLineSeparatorPath =
           createRectPathAroundLine(Line(endLineFrom, endLineTo), sectionSpace);
-      sectionPath = Path.combine(
-        PathOperation.difference,
-        sectionPath,
-        endLineSeparatorPath,
-      );
+      try {
+        sectionPath = Path.combine(
+          PathOperation.difference,
+          sectionPath,
+          endLineSeparatorPath,
+        );
+      } catch (e) {
+        /// It's a flutter engine issue with [Path.combine] in web-html renderer
+        /// https://github.com/imaNNeo/fl_chart/issues/955
+      }
     }
 
     return sectionPath;
@@ -268,7 +303,11 @@ class PieChartPainter extends BaseChartPainter<PieChartData> {
     CanvasWrapper canvasWrapper,
   ) {
     _sectionPaint
-      ..color = section.color
+      ..setColorOrGradient(
+        section.color,
+        section.gradient,
+        sectionPath.getBounds(),
+      )
       ..style = PaintingStyle.fill;
     canvasWrapper.drawPath(sectionPath, _sectionPaint);
   }
@@ -323,6 +362,15 @@ class PieChartPainter extends BaseChartPainter<PieChartData> {
       final sweepAngle = 360 * (section.value / data.sumValue);
       final sectionCenterAngle = startAngle + (sweepAngle / 2);
 
+      double? rotateAngle;
+      if (data.titleSunbeamLayout) {
+        if (sectionCenterAngle >= 90 && sectionCenterAngle <= 270) {
+          rotateAngle = sectionCenterAngle - 180;
+        } else {
+          rotateAngle = sectionCenterAngle;
+        }
+      }
+
       Offset sectionCenter(double percentageOffset) =>
           center +
           Offset(
@@ -344,12 +392,13 @@ class PieChartPainter extends BaseChartPainter<PieChartData> {
           text: span,
           textAlign: TextAlign.center,
           textDirection: TextDirection.ltr,
-          textScaleFactor: holder.textScale,
+          textScaler: holder.textScaler,
         )..layout();
 
         canvasWrapper.drawText(
           tp,
           sectionCenterOffsetTitle - Offset(tp.width / 2, tp.height / 2),
+          rotateAngle,
         );
       }
 

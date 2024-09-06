@@ -4,7 +4,6 @@ import 'dart:ui';
 
 import 'package:equatable/equatable.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:fl_chart/src/chart/bar_chart/bar_chart_helper.dart';
 import 'package:fl_chart/src/extensions/color_extension.dart';
 import 'package:fl_chart/src/utils/lerp.dart';
 import 'package:fl_chart/src/utils/utils.dart';
@@ -54,23 +53,17 @@ class BarChartData extends AxisChartData with EquatableMixin {
         barTouchData = barTouchData ?? BarTouchData(),
         super(
           titlesData: titlesData ??
-              FlTitlesData(
-                topTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: false,
-                  ),
-                ),
+              const FlTitlesData(
+                topTitles: AxisTitles(),
               ),
-          gridData: gridData ?? FlGridData(),
-          rangeAnnotations: rangeAnnotations ?? RangeAnnotations(),
+          gridData: gridData ?? const FlGridData(),
+          rangeAnnotations: rangeAnnotations ?? const RangeAnnotations(),
           touchData: barTouchData ?? BarTouchData(),
-          extraLinesData: extraLinesData ?? ExtraLinesData(),
+          extraLinesData: extraLinesData ?? const ExtraLinesData(),
           minX: 0,
           maxX: 1,
-          maxY: maxY ??
-              BarChartHelper.calculateMaxAxisValues(barGroups ?? []).maxY,
-          minY: minY ??
-              BarChartHelper.calculateMaxAxisValues(barGroups ?? []).minY,
+          maxY: maxY ?? double.nan,
+          minY: minY ?? double.nan,
         );
 
   /// [BarChart] draws [barGroups] that each of them contains a list of [BarChartRodData].
@@ -219,6 +212,9 @@ class BarChartGroupData with EquatableMixin {
   /// you can show some tooltipIndicators (a popup with an information)
   /// on top of each [BarChartRodData] using [showingTooltipIndicators],
   /// just put indices you want to show it on top of them.
+  ///
+  /// An important point is that you have to disable the default touch behaviour
+  /// to show the tooltip manually, see [BarTouchData.handleBuiltInTouches].
   final List<int> showingTooltipIndicators;
 
   /// width of the group (sum of all [BarChartRodData]'s width and spaces)
@@ -294,6 +290,7 @@ class BarChartRodData with EquatableMixin {
   /// and the x is equivalent to the [BarChartGroupData.x] value.
   ///
   /// It renders each rod using [color], [width], and [borderRadius] for rounding corners and also [borderSide] for stroke border.
+  /// Optionally you can use [borderDashArray] if you want your borders to have dashed lines.
   ///
   /// This bar draws with provided [color] or [gradient].
   /// You must provide one of them.
@@ -305,7 +302,7 @@ class BarChartRodData with EquatableMixin {
   /// If you are a fan of stacked charts (If you don't know what is it, google it),
   /// you can fill up the [rodStackItems] to have a Stacked Chart.
   /// for example if you want to have a Stacked Chart with three colors:
-  /// ```
+  /// ```dart
   /// BarChartRodData(
   ///   y: 9,
   ///   color: Colors.grey,
@@ -323,6 +320,7 @@ class BarChartRodData with EquatableMixin {
     this.gradient,
     double? width,
     BorderRadius? borderRadius,
+    this.borderDashArray,
     BorderSide? borderSide,
     BackgroundBarChartRodData? backDrawRodData,
     List<BarChartRodStackItem>? rodStackItems,
@@ -357,6 +355,9 @@ class BarChartRodData with EquatableMixin {
   /// If you want to have a rounded rod, set this value.
   final BorderRadius? borderRadius;
 
+  /// If you want to have dashed border, set this value.
+  final List<int>? borderDashArray;
+
   /// If you want to have a border for rod, set this value.
   final BorderSide borderSide;
 
@@ -381,6 +382,7 @@ class BarChartRodData with EquatableMixin {
     Gradient? gradient,
     double? width,
     BorderRadius? borderRadius,
+    List<int>? dashArray,
     BorderSide? borderSide,
     BackgroundBarChartRodData? backDrawRodData,
     List<BarChartRodStackItem>? rodStackItems,
@@ -392,6 +394,7 @@ class BarChartRodData with EquatableMixin {
       gradient: gradient ?? this.gradient,
       width: width ?? this.width,
       borderRadius: borderRadius ?? this.borderRadius,
+      borderDashArray: borderDashArray,
       borderSide: borderSide ?? this.borderSide,
       backDrawRodData: backDrawRodData ?? this.backDrawRodData,
       rodStackItems: rodStackItems ?? this.rodStackItems,
@@ -406,6 +409,7 @@ class BarChartRodData with EquatableMixin {
       color: Color.lerp(a.color, b.color, t),
       width: lerpDouble(a.width, b.width, t),
       borderRadius: BorderRadius.lerp(a.borderRadius, b.borderRadius, t),
+      borderDashArray: lerpIntList(a.borderDashArray, b.borderDashArray, t),
       borderSide: BorderSide.lerp(a.borderSide, b.borderSide, t),
       fromY: lerpDouble(a.fromY, b.fromY, t),
       toY: lerpDouble(a.toY, b.toY, t)!,
@@ -426,6 +430,7 @@ class BarChartRodData with EquatableMixin {
         toY,
         width,
         borderRadius,
+        borderDashArray,
         borderSide,
         backDrawRodData,
         rodStackItems,
@@ -441,7 +446,7 @@ class BarChartRodData with EquatableMixin {
 class BarChartRodStackItem with EquatableMixin {
   /// Renders a section of Stacked Chart from [fromY] to [toY] with [color]
   /// for example if you want to have a Stacked Chart with three colors:
-  /// ```
+  /// ```dart
   /// BarChartRodData(
   ///   y: 9,
   ///   color: Colors.grey,
@@ -576,7 +581,7 @@ class BackgroundBarChartRodData with EquatableMixin {
 
 /// Holds data to handle touch events, and touch responses in the [BarChart].
 ///
-/// There is a touch flow, explained [here](https://github.com/imaNNeo/fl_chart/blob/master/repo_files/documentations/handle_touches.md)
+/// There is a touch flow, explained [here](https://github.com/imaNNeo/fl_chart/blob/main/repo_files/documentations/handle_touches.md)
 /// in a simple way, each chart's renderer captures the touch events, and passes the pointerEvent
 /// to the painter, and gets touched spot, and wraps it into a concrete [BarTouchResponse].
 class BarTouchData extends FlTouchData<BarTouchResponse> with EquatableMixin {
@@ -685,7 +690,7 @@ class BarTouchTooltipData with EquatableMixin {
   /// if [BarTouchData.handleBuiltInTouches] is true,
   /// [BarChart] shows a tooltip popup on top of rods automatically when touch happens,
   /// otherwise you can show it manually using [BarChartGroupData.showingTooltipIndicators].
-  /// Tooltip shows on top of rods, with [tooltipBgColor] as a background color,
+  /// Tooltip shows on top of rods, with [getTooltipColor] as a background color,
   /// and you can set corner radius using [tooltipRoundedRadius].
   /// If you want to have a padding inside the tooltip, fill [tooltipPadding],
   /// or If you want to have a bottom margin, set [tooltipMargin].
@@ -696,7 +701,6 @@ class BarTouchTooltipData with EquatableMixin {
   /// you can set [fitInsideHorizontally] true to force it to shift inside the chart horizontally,
   /// also you can set [fitInsideVertically] true to force it to shift inside the chart vertically.
   BarTouchTooltipData({
-    Color? tooltipBgColor,
     double? tooltipRoundedRadius,
     EdgeInsets? tooltipPadding,
     double? tooltipMargin,
@@ -704,13 +708,13 @@ class BarTouchTooltipData with EquatableMixin {
     double? tooltipHorizontalOffset,
     double? maxContentWidth,
     GetBarTooltipItem? getTooltipItem,
+    GetBarTooltipColor? getTooltipColor,
     bool? fitInsideHorizontally,
     bool? fitInsideVertically,
     TooltipDirection? direction,
     double? rotateAngle,
     BorderSide? tooltipBorder,
-  })  : tooltipBgColor = tooltipBgColor ?? Colors.blueGrey.darken(15),
-        tooltipRoundedRadius = tooltipRoundedRadius ?? 4,
+  })  : tooltipRoundedRadius = tooltipRoundedRadius ?? 4,
         tooltipPadding = tooltipPadding ??
             const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         tooltipMargin = tooltipMargin ?? 16,
@@ -719,15 +723,13 @@ class BarTouchTooltipData with EquatableMixin {
         tooltipHorizontalOffset = tooltipHorizontalOffset ?? 0,
         maxContentWidth = maxContentWidth ?? 120,
         getTooltipItem = getTooltipItem ?? defaultBarTooltipItem,
+        getTooltipColor = getTooltipColor ?? defaultBarTooltipColor,
         fitInsideHorizontally = fitInsideHorizontally ?? false,
         fitInsideVertically = fitInsideVertically ?? false,
         direction = direction ?? TooltipDirection.auto,
         rotateAngle = rotateAngle ?? 0.0,
         tooltipBorder = tooltipBorder ?? BorderSide.none,
         super();
-
-  /// The tooltip background color.
-  final Color tooltipBgColor;
 
   /// Sets a rounded radius for the tooltip.
   final double tooltipRoundedRadius;
@@ -765,10 +767,12 @@ class BarTouchTooltipData with EquatableMixin {
   /// The tooltip border color.
   final BorderSide tooltipBorder;
 
+  /// Retrieves data for setting background color of the tooltip.
+  final GetBarTooltipColor getTooltipColor;
+
   /// Used for equality check, see [EquatableMixin].
   @override
   List<Object?> get props => [
-        tooltipBgColor,
         tooltipRoundedRadius,
         tooltipPadding,
         tooltipMargin,
@@ -780,6 +784,7 @@ class BarTouchTooltipData with EquatableMixin {
         fitInsideVertically,
         rotateAngle,
         tooltipBorder,
+        getTooltipColor,
       ];
 }
 
@@ -847,6 +852,20 @@ class BarTooltipItem with EquatableMixin {
         textDirection,
         children,
       ];
+}
+
+//// Provides a [Color] to show different background color for each rod
+///
+/// You can override [BarTouchTooltipData.getTooltipColor], it gives you
+/// [group] that touch happened on, then you should and pass your custom [Color] to set background color
+/// of tooltip popup.
+typedef GetBarTooltipColor = Color Function(
+  BarChartGroupData group,
+);
+
+/// Default implementation for [BarTouchTooltipData.getTooltipColor].
+Color defaultBarTooltipColor(BarChartGroupData group) {
+  return Colors.blueGrey.darken(15);
 }
 
 /// Holds information about touch response in the [BarChart].

@@ -1,7 +1,9 @@
 import 'package:fl_chart/fl_chart.dart';
+import 'package:fl_chart/src/chart/bar_chart/bar_chart_helper.dart';
 import 'package:fl_chart/src/chart/bar_chart/bar_chart_painter.dart';
 import 'package:fl_chart/src/chart/base/base_chart/base_chart_painter.dart';
 import 'package:fl_chart/src/extensions/bar_chart_data_extension.dart';
+import 'package:fl_chart/src/extensions/path_extension.dart';
 import 'package:fl_chart/src/utils/canvas_wrapper.dart';
 import 'package:fl_chart/src/utils/utils.dart';
 import 'package:flutter/material.dart';
@@ -20,31 +22,38 @@ void main() {
     test('test 1', () {
       final utilsMainInstance = Utils();
       const viewSize = Size(400, 400);
+      final barGroups = <BarChartGroupData>[
+        BarChartGroupData(
+          x: 1,
+          barRods: [
+            BarChartRodData(fromY: 1, toY: 10),
+            BarChartRodData(fromY: 2, toY: 10),
+          ],
+          showingTooltipIndicators: [
+            1,
+            2,
+          ],
+        ),
+        BarChartGroupData(
+          x: 2,
+          barRods: [
+            BarChartRodData(fromY: 3, toY: 10),
+            BarChartRodData(fromY: 4, toY: 10),
+          ],
+        ),
+      ];
+
+      final (minY, maxY) = BarChartHelper().calculateMaxAxisValues(barGroups);
+
       final data = BarChartData(
-        barGroups: [
-          BarChartGroupData(
-            x: 1,
-            barRods: [
-              BarChartRodData(fromY: 1, toY: 10),
-              BarChartRodData(fromY: 2, toY: 10),
-            ],
-            showingTooltipIndicators: [
-              1,
-              2,
-            ],
-          ),
-          BarChartGroupData(
-            x: 2,
-            barRods: [
-              BarChartRodData(fromY: 3, toY: 10),
-              BarChartRodData(fromY: 4, toY: 10),
-            ],
-          ),
-        ],
+        barGroups: barGroups,
+        minY: minY,
+        maxY: maxY,
       );
 
       final barChartPainter = BarChartPainter();
-      final holder = PaintHolder<BarChartData>(data, data, 1);
+      final holder =
+          PaintHolder<BarChartData>(data, data, TextScaler.noScaling);
 
       final mockUtils = MockUtils();
       Utils.changeInstance(mockUtils);
@@ -112,7 +121,7 @@ void main() {
       ];
 
       final data = BarChartData(
-        titlesData: FlTitlesData(show: false),
+        titlesData: const FlTitlesData(show: false),
         groupsSpace: 10,
         barGroups: barGroups,
       );
@@ -124,8 +133,8 @@ void main() {
       }
 
       expect(callWithAlignment(BarChartAlignment.center), [50, 92.5, 142.5]);
-      expect(callWithAlignment(BarChartAlignment.start), [20, 52.5, 92.5]);
-      expect(callWithAlignment(BarChartAlignment.end), [100, 132.5, 172.5]);
+      expect(callWithAlignment(BarChartAlignment.start), [20, 62.5, 112.5]);
+      expect(callWithAlignment(BarChartAlignment.end), [80.0, 122.5, 172.5]);
       expect(
         callWithAlignment(BarChartAlignment.spaceEvenly),
         [40, 92.5, 152.5],
@@ -170,7 +179,7 @@ void main() {
       ];
 
       final data = BarChartData(
-        titlesData: FlTitlesData(show: false),
+        titlesData: const FlTitlesData(show: false),
         groupsSpace: 10,
         alignment: BarChartAlignment.center,
         barGroups: barGroups,
@@ -227,7 +236,7 @@ void main() {
       ];
 
       final data = BarChartData(
-        titlesData: FlTitlesData(show: false),
+        titlesData: const FlTitlesData(show: false),
         groupsSpace: 10,
         barGroups: barGroups,
       );
@@ -252,10 +261,10 @@ void main() {
       expect(centerResult[2].barsX, [120, 135, 150, 165]);
 
       final startResult = callWithAlignment(BarChartAlignment.start);
-      expect(startResult.map((e) => e.groupX).toList(), [20, 52.5, 92.5]);
+      expect(startResult.map((e) => e.groupX).toList(), [20.0, 62.5, 112.5]);
       expect(startResult[0].barsX, [5, 20, 35]);
-      expect(startResult[1].barsX, [45, 60]);
-      expect(startResult[2].barsX, [70, 85, 100, 115]);
+      expect(startResult[1].barsX, [55, 70]);
+      expect(startResult[2].barsX, [90, 105, 120, 135]);
     });
   });
 
@@ -338,15 +347,20 @@ void main() {
         ),
       ];
 
+      final (minY, maxY) = BarChartHelper().calculateMaxAxisValues(barGroups);
+
       final data = BarChartData(
-        titlesData: FlTitlesData(show: false),
+        titlesData: const FlTitlesData(show: false),
         groupsSpace: 10,
         barGroups: barGroups,
         alignment: BarChartAlignment.center,
+        minY: minY,
+        maxY: maxY,
       );
 
       final barChartPainter = BarChartPainter();
-      final holder = PaintHolder<BarChartData>(data, data, 1);
+      final holder =
+          PaintHolder<BarChartData>(data, data, TextScaler.noScaling);
 
       final mockCanvasWrapper = MockCanvasWrapper();
       when(mockCanvasWrapper.size).thenAnswer((realInvocation) => viewSize);
@@ -389,7 +403,7 @@ void main() {
             28.5,
             0,
             38.5,
-            76.9,
+            76.923,
             const Radius.circular(0.1),
           ),
         ),
@@ -402,9 +416,9 @@ void main() {
           results[1]['rRect'] as RRect,
           RRect.fromLTRBR(
             43.5,
-            15.4,
+            15.384,
             54.5,
-            76.9,
+            76.923,
             const Radius.circular(0.2),
           ),
         ),
@@ -417,9 +431,9 @@ void main() {
           results[2]['rRect'] as RRect,
           RRect.fromLTRBR(
             59.5,
-            15.4,
+            15.384,
             71.5,
-            76.9,
+            76.923,
             const Radius.circular(0.3),
           ),
         ),
@@ -434,7 +448,7 @@ void main() {
             81.5,
             0,
             91.5,
-            76.9,
+            76.923,
             const Radius.circular(0.4),
           ),
         ),
@@ -445,9 +459,9 @@ void main() {
           results[4]['rRect'] as RRect,
           RRect.fromLTRBR(
             96.5,
-            15.4,
+            15.384,
             106.5,
-            76.9,
+            76.923,
             const Radius.circular(5),
           ),
         ),
@@ -459,9 +473,9 @@ void main() {
           results[5]['rRect'] as RRect,
           RRect.fromLTRBR(
             116.5,
-            15.4,
+            15.384,
             126.5,
-            76.9,
+            76.923,
             const Radius.circular(5),
           ),
         ),
@@ -475,7 +489,7 @@ void main() {
             116.5,
             0,
             126.5,
-            76.9,
+            76.923,
             const Radius.circular(5),
           ),
         ),
@@ -486,9 +500,9 @@ void main() {
           results[7]['rRect'] as RRect,
           RRect.fromLTRBR(
             131.5,
-            15.4,
+            15.384,
             141.5,
-            76.9,
+            76.923,
             const Radius.circular(5),
           ),
         ),
@@ -500,7 +514,7 @@ void main() {
           results[8]['rRect'] as RRect,
           RRect.fromLTRBR(
             146.5,
-            76.9,
+            76.923,
             156.5,
             100,
             const Radius.circular(5),
@@ -514,9 +528,9 @@ void main() {
           results[9]['rRect'] as RRect,
           RRect.fromLTRBR(
             146.5,
-            15.4,
+            15.384,
             156.5,
-            76.9,
+            76.923,
             const Radius.circular(5),
           ),
         ),
@@ -527,9 +541,9 @@ void main() {
           results[10]['rRect'] as RRect,
           RRect.fromLTRBR(
             161.5,
-            15.4,
+            15.384,
             171.5,
-            76.9,
+            76.923,
             const Radius.circular(5),
           ),
         ),
@@ -598,15 +612,20 @@ void main() {
         ),
       ];
 
+      final (minY, maxY) = BarChartHelper().calculateMaxAxisValues(barGroups);
+
       final data = BarChartData(
-        titlesData: FlTitlesData(show: false),
+        titlesData: const FlTitlesData(show: false),
         groupsSpace: 10,
         barGroups: barGroups,
         alignment: BarChartAlignment.center,
+        minY: minY,
+        maxY: maxY,
       );
 
       final barChartPainter = BarChartPainter();
-      final holder = PaintHolder<BarChartData>(data, data, 1);
+      final holder =
+          PaintHolder<BarChartData>(data, data, TextScaler.noScaling);
 
       final mockCanvasWrapper = MockCanvasWrapper();
       when(mockCanvasWrapper.size).thenAnswer((realInvocation) => viewSize);
@@ -649,7 +668,7 @@ void main() {
             84,
             65,
             94,
-            66.7,
+            66.666,
             const Radius.circular(0.1),
           ),
         ),
@@ -662,9 +681,9 @@ void main() {
           results[1]['rrect'] as RRect,
           RRect.fromLTRBR(
             83.5,
-            68.3,
+            68.333,
             94.5,
-            83.3,
+            83.333,
             const Radius.circular(0.2),
           ),
         ),
@@ -692,7 +711,7 @@ void main() {
           results[3]['rrect'] as RRect,
           RRect.fromLTRBR(
             106,
-            33.3,
+            33.333,
             116,
             35,
             const Radius.circular(0.1),
@@ -705,9 +724,9 @@ void main() {
           results[4]['rrect'] as RRect,
           RRect.fromLTRBR(
             105.5,
-            16.7,
+            16.666,
             116.5,
-            31.7,
+            31.666,
             const Radius.circular(0.2),
           ),
         ),
@@ -728,6 +747,273 @@ void main() {
         true,
       );
     });
+
+    test('test 3', () {
+      const viewSize = Size(200, 100);
+
+      final barGroups = [
+        BarChartGroupData(
+          x: 0,
+          barRods: [
+            BarChartRodData(
+              fromY: -10,
+              toY: 10,
+              color: const Color(0x00000000),
+              rodStackItems: [
+                BarChartRodStackItem(-5, -10, const Color(0x11111111)),
+                BarChartRodStackItem(0, -5, const Color(0x22222222)),
+                BarChartRodStackItem(0, 5, const Color(0x33333333)),
+                BarChartRodStackItem(5, 10, const Color(0x44444444)),
+              ],
+            ),
+          ],
+        ),
+      ];
+
+      final data = BarChartData(barGroups: barGroups);
+
+      final barChartPainter = BarChartPainter();
+      final holder =
+          PaintHolder<BarChartData>(data, data, TextScaler.noScaling);
+
+      final mockCanvasWrapper = MockCanvasWrapper();
+      when(mockCanvasWrapper.size).thenAnswer((realInvocation) => viewSize);
+      when(mockCanvasWrapper.canvas).thenReturn(MockCanvas());
+
+      final groupsX = data.calculateGroupsX(viewSize.width);
+      final barGroupsPosition = barChartPainter.calculateGroupAndBarsPosition(
+        viewSize,
+        groupsX,
+        barGroups,
+      );
+
+      final results = <Map<String, dynamic>>[];
+      when(mockCanvasWrapper.drawRRect(captureAny, captureAny))
+          .thenAnswer((inv) {
+        final paint = inv.positionalArguments[1] as Paint;
+        results.add({
+          'paint_color': paint.color,
+        });
+      });
+
+      barChartPainter.drawBars(mockCanvasWrapper, barGroupsPosition, holder);
+      expect(results.length, 5);
+      expect(results[1]['paint_color'], const Color(0x11111111));
+      expect(results[2]['paint_color'], const Color(0x22222222));
+      expect(results[3]['paint_color'], const Color(0x33333333));
+      expect(results[4]['paint_color'], const Color(0x44444444));
+    });
+
+    test('test 4', () {
+      const viewSize = Size(200, 100);
+
+      final barGroups = [
+        BarChartGroupData(
+          x: 0,
+          barRods: [
+            BarChartRodData(
+              fromY: 0,
+              toY: 5,
+              borderRadius: BorderRadius.zero,
+              color: Colors.white,
+            ),
+          ],
+        ),
+        BarChartGroupData(
+          x: 1,
+          barRods: [
+            BarChartRodData(
+              fromY: 0,
+              toY: 10,
+              borderRadius: BorderRadius.zero,
+              color: Colors.white,
+            ),
+          ],
+        ),
+        BarChartGroupData(
+          x: 3,
+          barRods: [
+            BarChartRodData(
+              fromY: 0,
+              toY: 15,
+              borderDashArray: [4, 4],
+              borderSide: const BorderSide(
+                color: Colors.white,
+                width: 2,
+              ),
+              borderRadius: BorderRadius.zero,
+              color: Colors.transparent,
+            ),
+          ],
+        ),
+      ];
+
+      final (minY, maxY) = BarChartHelper().calculateMaxAxisValues(barGroups);
+
+      final data = BarChartData(
+        barGroups: barGroups,
+        minY: minY,
+        maxY: maxY,
+      );
+
+      final barChartPainter = BarChartPainter();
+      final holder =
+          PaintHolder<BarChartData>(data, data, TextScaler.noScaling);
+
+      final mockCanvasWrapper = MockCanvasWrapper();
+      when(mockCanvasWrapper.size).thenAnswer((realInvocation) => viewSize);
+      when(mockCanvasWrapper.canvas).thenReturn(MockCanvas());
+
+      final groupsX = data.calculateGroupsX(viewSize.width);
+      final barGroupsPosition = barChartPainter.calculateGroupAndBarsPosition(
+        viewSize,
+        groupsX,
+        barGroups,
+      );
+
+      final rodDataResults = <Map<String, dynamic>>[];
+      final borderResult = <Map<String, dynamic>>[];
+
+      when(mockCanvasWrapper.drawRRect(captureAny, captureAny))
+          .thenAnswer((inv) {
+        final rrect = inv.positionalArguments[0] as RRect;
+        final paint = inv.positionalArguments[1] as Paint;
+        rodDataResults.add({
+          'rrect': rrect,
+          'paint_color': paint.color,
+        });
+      });
+
+      when(mockCanvasWrapper.drawPath(captureAny, captureAny))
+          .thenAnswer((inv) {
+        final path = inv.positionalArguments[0] as Path;
+        final paint = inv.positionalArguments[1] as Paint;
+        borderResult.add({
+          'path': path,
+          'paint_color': paint.color,
+        });
+      });
+
+      barChartPainter.drawBars(mockCanvasWrapper, barGroupsPosition, holder);
+      expect(rodDataResults.length, 3);
+      expect(rodDataResults[0]['paint_color'], Colors.white);
+      expect(rodDataResults[1]['paint_color'], Colors.white);
+      expect(rodDataResults[2]['paint_color'], Colors.transparent);
+
+      expect(borderResult.length, 1);
+      expect(borderResult[0]['paint_color'], Colors.white);
+      final rrect = rodDataResults[2]['rrect'] as RRect;
+      final path = Path()..addRRect(rrect);
+      final expectedPath = path.toDashedPath([4, 4]);
+      final currentPath = borderResult[0]['path'] as Path;
+
+      expect(HelperMethods.equalsPaths(expectedPath, currentPath), true);
+    });
+
+    test('test 5', () {
+      const viewSize = Size(200, 100);
+
+      final barGroups = [
+        BarChartGroupData(
+          x: 0,
+          barRods: [
+            BarChartRodData(
+              fromY: 0,
+              toY: 5,
+              borderRadius: BorderRadius.zero,
+              color: Colors.white,
+            ),
+          ],
+        ),
+        BarChartGroupData(
+          x: 1,
+          barRods: [
+            BarChartRodData(
+              fromY: 0,
+              toY: 10,
+              borderRadius: BorderRadius.zero,
+              color: Colors.white,
+            ),
+          ],
+        ),
+        BarChartGroupData(
+          x: 3,
+          barRods: [
+            BarChartRodData(
+              fromY: 0,
+              toY: 15,
+              borderSide: const BorderSide(
+                color: Colors.white,
+                width: 2,
+              ),
+              borderRadius: BorderRadius.zero,
+              color: Colors.transparent,
+            ),
+          ],
+        ),
+      ];
+
+      final (minY, maxY) = BarChartHelper().calculateMaxAxisValues(barGroups);
+
+      final data = BarChartData(
+        barGroups: barGroups,
+        minY: minY,
+        maxY: maxY,
+      );
+
+      final barChartPainter = BarChartPainter();
+      final holder =
+          PaintHolder<BarChartData>(data, data, TextScaler.noScaling);
+
+      final mockCanvasWrapper = MockCanvasWrapper();
+      when(mockCanvasWrapper.size).thenAnswer((realInvocation) => viewSize);
+      when(mockCanvasWrapper.canvas).thenReturn(MockCanvas());
+
+      final groupsX = data.calculateGroupsX(viewSize.width);
+      final barGroupsPosition = barChartPainter.calculateGroupAndBarsPosition(
+        viewSize,
+        groupsX,
+        barGroups,
+      );
+
+      final rodDataResults = <Map<String, dynamic>>[];
+      final borderResult = <Map<String, dynamic>>[];
+
+      when(mockCanvasWrapper.drawRRect(captureAny, captureAny))
+          .thenAnswer((inv) {
+        final rrect = inv.positionalArguments[0] as RRect;
+        final paint = inv.positionalArguments[1] as Paint;
+        rodDataResults.add({
+          'rrect': rrect,
+          'paint_color': paint.color,
+        });
+      });
+
+      when(mockCanvasWrapper.drawPath(captureAny, captureAny))
+          .thenAnswer((inv) {
+        final path = inv.positionalArguments[0] as Path;
+        final paint = inv.positionalArguments[1] as Paint;
+        borderResult.add({
+          'path': path,
+          'paint_color': paint.color,
+        });
+      });
+
+      barChartPainter.drawBars(mockCanvasWrapper, barGroupsPosition, holder);
+      expect(rodDataResults.length, 3);
+      expect(rodDataResults[0]['paint_color'], Colors.white);
+      expect(rodDataResults[1]['paint_color'], Colors.white);
+      expect(rodDataResults[2]['paint_color'], Colors.transparent);
+
+      expect(borderResult.length, 1);
+      expect(borderResult[0]['paint_color'], Colors.white);
+      final rrect = rodDataResults[2]['rrect'] as RRect;
+      final path = Path()..addRRect(rrect);
+      final expectedPath = path.toDashedPath(null);
+      final currentPath = borderResult[0]['path'] as Path;
+
+      expect(HelperMethods.equalsPaths(expectedPath, currentPath), true);
+    });
   });
 
   group('drawTouchTooltip()', () {
@@ -740,7 +1026,7 @@ void main() {
       when(mockUtils.normalizeBorderSide(any, any)).thenReturn(BorderSide.none);
       when(mockUtils.calculateRotationOffset(any, any)).thenReturn(Offset.zero);
       when(mockUtils.getBestInitialIntervalValue(any, any, any)).thenReturn(0);
-      when(mockUtils.formatNumber(captureAny)).thenAnswer((inv) {
+      when(mockUtils.formatNumber(any, any, captureAny)).thenAnswer((inv) {
         final value = inv.positionalArguments[0] as double;
         return '${value.toInt()}';
       });
@@ -799,7 +1085,7 @@ void main() {
 
       final tooltipData = BarTouchTooltipData(
         tooltipRoundedRadius: 8,
-        tooltipBgColor: const Color(0xf33f33f3),
+        getTooltipColor: (group) => const Color(0xf33f33f3),
         maxContentWidth: 80,
         rotateAngle: 12,
         tooltipBorder: const BorderSide(color: Color(0xf33f33f3), width: 2),
@@ -822,6 +1108,8 @@ void main() {
         },
       );
 
+      final (minY, maxY) = BarChartHelper().calculateMaxAxisValues(barGroups);
+
       final data = BarChartData(
         groupsSpace: 10,
         barGroups: barGroups,
@@ -829,10 +1117,13 @@ void main() {
           touchTooltipData: tooltipData,
         ),
         alignment: BarChartAlignment.center,
+        minY: minY,
+        maxY: maxY,
       );
 
       final barChartPainter = BarChartPainter();
-      final holder = PaintHolder<BarChartData>(data, data, 1);
+      final holder =
+          PaintHolder<BarChartData>(data, data, TextScaler.noScaling);
 
       final mockCanvasWrapper = MockCanvasWrapper();
       when(mockCanvasWrapper.size).thenAnswer((realInvocation) => viewSize);
@@ -932,7 +1223,7 @@ void main() {
       when(mockUtils.normalizeBorderSide(any, any)).thenReturn(BorderSide.none);
       when(mockUtils.calculateRotationOffset(any, any)).thenReturn(Offset.zero);
       when(mockUtils.getBestInitialIntervalValue(any, any, any)).thenReturn(0);
-      when(mockUtils.formatNumber(captureAny)).thenAnswer((inv) {
+      when(mockUtils.formatNumber(any, any, captureAny)).thenAnswer((inv) {
         final value = inv.positionalArguments[0] as double;
         return '${value.toInt()}';
       });
@@ -991,7 +1282,7 @@ void main() {
 
       final tooltipData = BarTouchTooltipData(
         tooltipRoundedRadius: 8,
-        tooltipBgColor: const Color(0xf33f33f3),
+        getTooltipColor: (group) => const Color(0xf33f33f3),
         maxContentWidth: 80,
         rotateAngle: 12,
         direction: TooltipDirection.bottom,
@@ -1017,6 +1308,8 @@ void main() {
         },
       );
 
+      final (minY, maxY) = BarChartHelper().calculateMaxAxisValues(barGroups);
+
       final data = BarChartData(
         groupsSpace: 10,
         barGroups: barGroups,
@@ -1024,10 +1317,13 @@ void main() {
           touchTooltipData: tooltipData,
         ),
         alignment: BarChartAlignment.center,
+        minY: minY,
+        maxY: maxY,
       );
 
       final barChartPainter = BarChartPainter();
-      final holder = PaintHolder<BarChartData>(data, data, 1);
+      final holder =
+          PaintHolder<BarChartData>(data, data, TextScaler.noScaling);
 
       final mockCanvasWrapper = MockCanvasWrapper();
       when(mockCanvasWrapper.size).thenAnswer((realInvocation) => viewSize);
@@ -1127,7 +1423,7 @@ void main() {
       when(mockUtils.normalizeBorderSide(any, any)).thenReturn(BorderSide.none);
       when(mockUtils.calculateRotationOffset(any, any)).thenReturn(Offset.zero);
       when(mockUtils.getBestInitialIntervalValue(any, any, any)).thenReturn(0);
-      when(mockUtils.formatNumber(captureAny)).thenAnswer((inv) {
+      when(mockUtils.formatNumber(any, any, captureAny)).thenAnswer((inv) {
         final value = inv.positionalArguments[0] as double;
         return '${value.toInt()}';
       });
@@ -1157,7 +1453,7 @@ void main() {
 
       final tooltipData = BarTouchTooltipData(
         tooltipRoundedRadius: 8,
-        tooltipBgColor: const Color(0xf33f33f3),
+        getTooltipColor: (group) => const Color(0xf33f33f3),
         maxContentWidth: 8000,
         rotateAngle: 12,
         fitInsideHorizontally: true,
@@ -1186,6 +1482,9 @@ void main() {
           );
         },
       );
+
+      final (minY, maxY) = BarChartHelper().calculateMaxAxisValues(barGroups);
+
       final data = BarChartData(
         groupsSpace: 10,
         barGroups: barGroups,
@@ -1193,10 +1492,13 @@ void main() {
           touchTooltipData: tooltipData,
         ),
         alignment: BarChartAlignment.center,
+        minY: minY,
+        maxY: maxY,
       );
 
       final barChartPainter = BarChartPainter();
-      final holder = PaintHolder<BarChartData>(data, data, 1);
+      final holder =
+          PaintHolder<BarChartData>(data, data, TextScaler.noScaling);
 
       final mockCanvasWrapper = MockCanvasWrapper();
       when(mockCanvasWrapper.size).thenAnswer((realInvocation) => viewSize);
@@ -1312,14 +1614,19 @@ void main() {
         BarChartGroupData(x: 0, barRods: [barRod], barsSpace: 5),
       ];
 
+      final (minY, maxY) = BarChartHelper().calculateMaxAxisValues(barGroups);
+
       final data = BarChartData(
         groupsSpace: 10,
         barGroups: barGroups,
         barTouchData: BarTouchData(),
+        minY: minY,
+        maxY: maxY,
       );
 
       final barChartPainter = BarChartPainter();
-      final holder = PaintHolder<BarChartData>(data, data, 1);
+      final holder =
+          PaintHolder<BarChartData>(data, data, TextScaler.noScaling);
 
       final mockCanvasWrapper = MockCanvasWrapper();
       when(mockCanvasWrapper.size).thenAnswer((realInvocation) => viewSize);
@@ -1485,19 +1792,24 @@ void main() {
         ),
       ];
 
+      final (minY, maxY) = BarChartHelper().calculateMaxAxisValues(barGroups);
+
       final data = BarChartData(
         barGroups: barGroups,
-        titlesData: FlTitlesData(show: false),
+        titlesData: const FlTitlesData(show: false),
         alignment: BarChartAlignment.center,
         groupsSpace: 10,
         barTouchData: BarTouchData(
           handleBuiltInTouches: true,
           touchExtraThreshold: const EdgeInsets.all(1),
         ),
+        minY: minY,
+        maxY: maxY,
       );
 
       final painter = BarChartPainter();
-      final holder = PaintHolder<BarChartData>(data, data, 1);
+      final holder =
+          PaintHolder<BarChartData>(data, data, TextScaler.noScaling);
 
       expect(painter.handleTouch(const Offset(10, 10), viewSize, holder), null);
       expect(
@@ -1564,7 +1876,7 @@ void main() {
               color: const Color(0x00000000),
               borderRadius: const BorderRadius.all(Radius.circular(0.1)),
               rodStackItems: [
-                BarChartRodStackItem(0, 5, const Color(0xFF0F0F0F))
+                BarChartRodStackItem(0, 5, const Color(0xFF0F0F0F)),
               ],
             ),
           ],
@@ -1583,19 +1895,24 @@ void main() {
         ),
       ];
 
+      final (minY, maxY) = BarChartHelper().calculateMaxAxisValues(barGroups);
+
       final data = BarChartData(
         barGroups: barGroups,
-        titlesData: FlTitlesData(show: false),
+        titlesData: const FlTitlesData(show: false),
         alignment: BarChartAlignment.center,
         groupsSpace: 10,
         barTouchData: BarTouchData(
           handleBuiltInTouches: true,
           touchExtraThreshold: const EdgeInsets.all(1),
         ),
+        minY: minY,
+        maxY: maxY,
       );
 
       final painter = BarChartPainter();
-      final holder = PaintHolder<BarChartData>(data, data, 1);
+      final holder =
+          PaintHolder<BarChartData>(data, data, TextScaler.noScaling);
 
       expect(
         painter.handleTouch(const Offset(134, 48.6), viewSize, holder),
@@ -1611,10 +1928,6 @@ void main() {
         null,
       );
       expect(
-        painter.handleTouch(const Offset(91.3, 55.3), viewSize, holder),
-        null,
-      );
-      expect(
         painter.handleTouch(const Offset(100.4, 21.2), viewSize, holder),
         null,
       );
@@ -1624,22 +1937,89 @@ void main() {
       );
 
       final result1 =
-          painter.handleTouch(const Offset(110.1, 70.2), viewSize, holder);
-      expect(result1!.touchedBarGroupIndex, 1);
+          painter.handleTouch(const Offset(89, 38.5), viewSize, holder);
+      expect(result1!.touchedBarGroupIndex, 0);
       expect(result1.touchedRodDataIndex, 0);
-      expect(result1.touchedStackItemIndex, -1);
+      expect(result1.touchedStackItemIndex, 0);
 
       final result2 =
-          painter.handleTouch(const Offset(89, 38.5), viewSize, holder);
+          painter.handleTouch(const Offset(88.8, 16.5), viewSize, holder);
       expect(result2!.touchedBarGroupIndex, 0);
       expect(result2.touchedRodDataIndex, 0);
-      expect(result2.touchedStackItemIndex, 0);
+      expect(result2.touchedStackItemIndex, -1);
+    });
 
-      final result3 =
-          painter.handleTouch(const Offset(88.8, 16.5), viewSize, holder);
-      expect(result3!.touchedBarGroupIndex, 0);
-      expect(result3.touchedRodDataIndex, 0);
-      expect(result3.touchedStackItemIndex, -1);
+    test('test 3', () {
+      const viewSize = Size(200, 100);
+
+      final barGroups = [
+        BarChartGroupData(
+          x: 1,
+          barRods: [
+            BarChartRodData(
+              toY: 5,
+              backDrawRodData: BackgroundBarChartRodData(
+                show: true,
+                fromY: -5,
+                toY: 5,
+              ),
+            ),
+          ],
+        ),
+        BarChartGroupData(
+          x: 1,
+          barRods: [
+            BarChartRodData(
+              toY: -6,
+              backDrawRodData: BackgroundBarChartRodData(
+                show: true,
+                fromY: 5,
+                toY: -6,
+              ),
+            ),
+          ],
+        ),
+      ];
+
+      final data = BarChartData(
+        barGroups: barGroups,
+        titlesData: const FlTitlesData(show: false),
+        alignment: BarChartAlignment.start,
+        groupsSpace: 10,
+        minY: -10,
+        maxY: 15,
+        barTouchData: BarTouchData(
+          enabled: true,
+          handleBuiltInTouches: true,
+          allowTouchBarBackDraw: true,
+          touchExtraThreshold: const EdgeInsets.all(1),
+        ),
+      );
+
+      final painter = BarChartPainter();
+      final holder =
+          PaintHolder<BarChartData>(data, data, TextScaler.noScaling);
+
+      final result1 =
+          painter.handleTouch(const Offset(4, 60), viewSize, holder);
+      expect(result1!.touchedBarGroupIndex, 0);
+      expect(result1.touchedRodDataIndex, 0);
+
+      // tap below the positive bar
+      final result11 =
+          painter.handleTouch(const Offset(4, 61.1), viewSize, holder);
+      expect(result11!.touchedBarGroupIndex, 0);
+      expect(result11.touchedRodDataIndex, 0);
+
+      final result2 =
+          painter.handleTouch(const Offset(22, 60), viewSize, holder);
+      expect(result2!.touchedBarGroupIndex, 1);
+      expect(result2.touchedRodDataIndex, 0);
+
+      final result22 =
+          painter.handleTouch(const Offset(22, 58.9), viewSize, holder);
+      expect(result22!.touchedBarGroupIndex, 1);
+      expect(result22.touchedRodDataIndex, 0);
     });
   });
 
@@ -1669,11 +2049,12 @@ void main() {
             ],
           ),
         ],
-        extraLinesData: ExtraLinesData(),
+        extraLinesData: const ExtraLinesData(),
       );
 
       final barChartPainter = BarChartPainter();
-      final holder = PaintHolder<BarChartData>(data, data, 1);
+      final holder =
+          PaintHolder<BarChartData>(data, data, TextScaler.noScaling);
       final mockBuildContext = MockBuildContext();
       final mockCanvasWrapper = MockCanvasWrapper();
 
@@ -1723,7 +2104,8 @@ void main() {
       );
 
       final barChartPainter = BarChartPainter();
-      final holder = PaintHolder<BarChartData>(data, data, 1);
+      final holder =
+          PaintHolder<BarChartData>(data, data, TextScaler.noScaling);
       final mockBuildContext = MockBuildContext();
       final mockCanvasWrapper = MockCanvasWrapper();
 
@@ -1749,34 +2131,42 @@ void main() {
     test('bar chart should not paint vertical lines', () {
       final utilsMainInstance = Utils();
       const viewSize = Size(400, 400);
+
+      final barGroups = <BarChartGroupData>[
+        BarChartGroupData(
+          x: 1,
+          barRods: [
+            BarChartRodData(fromY: 1, toY: 10),
+            BarChartRodData(fromY: 2, toY: 10),
+          ],
+          showingTooltipIndicators: [
+            1,
+            2,
+          ],
+        ),
+        BarChartGroupData(
+          x: 2,
+          barRods: [
+            BarChartRodData(fromY: 3, toY: 10),
+            BarChartRodData(fromY: 4, toY: 10),
+          ],
+        ),
+      ];
+
+      final (minY, maxY) = BarChartHelper().calculateMaxAxisValues(barGroups);
+
       final data = BarChartData(
-        barGroups: [
-          BarChartGroupData(
-            x: 1,
-            barRods: [
-              BarChartRodData(fromY: 1, toY: 10),
-              BarChartRodData(fromY: 2, toY: 10),
-            ],
-            showingTooltipIndicators: [
-              1,
-              2,
-            ],
-          ),
-          BarChartGroupData(
-            x: 2,
-            barRods: [
-              BarChartRodData(fromY: 3, toY: 10),
-              BarChartRodData(fromY: 4, toY: 10),
-            ],
-          ),
-        ],
+        minY: minY,
+        maxY: maxY,
+        barGroups: barGroups,
         extraLinesData: ExtraLinesData(
           verticalLines: [verticalLine1],
         ),
       );
 
       final barChartPainter = BarChartPainter();
-      final holder = PaintHolder<BarChartData>(data, data, 1);
+      final holder =
+          PaintHolder<BarChartData>(data, data, TextScaler.noScaling);
 
       final mockUtils = MockUtils();
       Utils.changeInstance(mockUtils);
@@ -1872,7 +2262,8 @@ void main() {
       );
 
       final barChartPainter = BarChartPainter();
-      final holder = PaintHolder<BarChartData>(data, data, 1);
+      final holder =
+          PaintHolder<BarChartData>(data, data, TextScaler.noScaling);
 
       final mockUtils = MockUtils();
       Utils.changeInstance(mockUtils);
@@ -1936,34 +2327,42 @@ void main() {
       );
       final utilsMainInstance = Utils();
       const viewSize = Size(400, 400);
+
+      final barGroups = <BarChartGroupData>[
+        BarChartGroupData(
+          x: 1,
+          barRods: [
+            BarChartRodData(fromY: 1, toY: 10),
+            BarChartRodData(fromY: 2, toY: 10),
+          ],
+          showingTooltipIndicators: [
+            1,
+            2,
+          ],
+        ),
+        BarChartGroupData(
+          x: 2,
+          barRods: [
+            BarChartRodData(fromY: 3, toY: 10),
+            BarChartRodData(fromY: 4, toY: 10),
+          ],
+        ),
+      ];
+
+      final (minY, maxY) = BarChartHelper().calculateMaxAxisValues(barGroups);
+
       final data = BarChartData(
-        barGroups: [
-          BarChartGroupData(
-            x: 1,
-            barRods: [
-              BarChartRodData(fromY: 1, toY: 10),
-              BarChartRodData(fromY: 2, toY: 10),
-            ],
-            showingTooltipIndicators: [
-              1,
-              2,
-            ],
-          ),
-          BarChartGroupData(
-            x: 2,
-            barRods: [
-              BarChartRodData(fromY: 3, toY: 10),
-              BarChartRodData(fromY: 4, toY: 10),
-            ],
-          ),
-        ],
+        minY: minY,
+        maxY: maxY,
+        barGroups: barGroups,
         extraLinesData: ExtraLinesData(
           horizontalLines: [horizontalLine, horizontalLine1],
         ),
       );
 
       final barChartPainter = BarChartPainter();
-      final holder = PaintHolder<BarChartData>(data, data, 1);
+      final holder =
+          PaintHolder<BarChartData>(data, data, TextScaler.noScaling);
 
       final mockUtils = MockUtils();
       Utils.changeInstance(mockUtils);
@@ -2020,17 +2419,10 @@ void main() {
         holder,
       );
 
-      expect(results.length, 2);
+      expect(results.length, 1);
 
       expect(results[0]['paint_color'], Colors.cyanAccent.value);
       expect(results[0]['paint_stroke_width'], 90);
-      expect(results[0]['from'], const Offset(0, 300));
-      expect(results[0]['to'], const Offset(400, 300));
-
-      expect(results[1]['paint_color'], Colors.cyanAccent.value);
-      expect(results[1]['paint_stroke_width'], 100);
-      expect(results[1]['from'], const Offset(0, 392));
-      expect(results[1]['to'], const Offset(400, 392));
 
       Utils.changeInstance(utilsMainInstance);
     });
@@ -2047,9 +2439,9 @@ void main() {
               BarChartRodData(fromY: 1, toY: 10),
               BarChartRodData(fromY: 2, toY: 10),
             ],
-          )
+          ),
         ],
-        titlesData: FlTitlesData(show: false),
+        titlesData: const FlTitlesData(show: false),
         extraLinesData: ExtraLinesData(
           horizontalLines: [
             HorizontalLine(
@@ -2068,7 +2460,8 @@ void main() {
       );
 
       final barChartPainter = BarChartPainter();
-      final holder = PaintHolder<BarChartData>(data, data, 1);
+      final holder =
+          PaintHolder<BarChartData>(data, data, TextScaler.noScaling);
       final mockCanvasWrapper = MockCanvasWrapper();
       when(mockCanvasWrapper.size).thenAnswer((realInvocation) => viewSize);
       when(mockCanvasWrapper.canvas).thenReturn(MockCanvas());
